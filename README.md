@@ -8,7 +8,9 @@ Sample Horse server validate basic authentication:
 uses Horse, Horse.JWT, System.SysUtils;
 
 begin
-  
+  THorse.Use(JWT);
+
+
   THorse.Listen(80);
 end.
 ```
