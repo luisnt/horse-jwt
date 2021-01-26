@@ -1,143 +1,79 @@
 unit Horse.JWT;
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
 
 interface
 
-type
-  TJwtAlgorithm = (HS256, HS384, HS512);
+uses
+  {$IF DEFINED(FPC)}SysUtils, base64, Classes, {$ELSE} System.SysUtils, System.NetEncoding, System.Classes {$ENDIF}
+    , Horse
+    , Horse.Commons
+    ;
 
-function Token(aJwtID: int64; aEmissor: String; aIPClient: String; aPassword: String = 'your-256-bit-secret';
-  aJwtAlgorithm: TJwtAlgorithm = TJwtAlgorithm.HS256): String;
-function Verify(aToken: String; aPassword: String = 'your-256-bit-secret'): boolean;
+type
+  JWT = class
+    class procedure Login(Req: THorseRequest; Res: THorseResponse; Next: {$IF DEFINED(FPC)} TNextProc {$ELSE} TProc {$ENDIF} );
+    class procedure Guard(Req: THorseRequest; Res: THorseResponse; Next: {$IF DEFINED(FPC)} TNextProc {$ELSE} TProc {$ENDIF} );
+  end;
+
+const
+  BASEC_AUTH    = 'basic';
+  BEARER        = 'bearer';
+  AUTHORIZATION = 'authorization';
 
 implementation
 
 uses
-  System.JSON
-    , System.SysUtils
-    , System.DateUtils
-    , System.TypInfo
-
-    , JOSE.Types.Bytes
-    , JOSE.Core.JWK
-    , JOSE.Core.JWS
-    , JOSE.Core.JWT
-    , JOSE.Core.JWA
+  Web.HTTPApp
+    , Core.JWT
     ;
 
-type
-  TJwtAlgorithmHelper = record Helper for TJwtAlgorithm
-  public
-    function AsJoseAlgorithmID: TJoseAlgorithmID;
-    function AsString: String;
-  end;
+{ JWT }
 
-  TJwtAlgorithmStringHelper = record Helper for
-    String
-      public
-    function AsJwtAlgorithm: TJwtAlgorithm;
-    function AsJoseAlgorithmID: TJoseAlgorithmID;
-    function ClearLineBreak: String;
-  end;
-
-function Token(aJwtID: int64; aEmissor: String; aIPClient: String; aPassword: String = 'your-256-bit-secret'; aJwtAlgorithm: TJwtAlgorithm = TJwtAlgorithm.HS256): String;
-  function GenerateToken(const aHeader: String; const aPayload: String; const aPassword: string; aJoseAlgorithmID: TJoseAlgorithmID = TJoseAlgorithmID.HS256): String;
-  var
-    FJWT   : JOSE.Core.JWT.TJWT;
-    LKey   : JOSE.Core.JWK.TJWK;
-    LSigner: JOSE.Core.JWS.TJWS;
+class procedure JWT.Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  LWebResponse: {$IF DEFINED(FPC)}TResponse{$ELSE} TWebResponse {$ENDIF};
+begin
+  LWebResponse := THorseHackResponse(Res).GetWebResponse;
+  if THorseHackRequest(Req).GetWebRequest.Method = 'POST' then
   begin
-    FJWT := JOSE.Core.JWT.TJWT.Create(JOSE.Core.JWT.TJWTClaims);
-    FJWT.Header.JSON.Free;
-    FJWT.Claims.JSON.Free;
+    Res.Send('').Status(THTTPStatus.NoContent);
+    raise EHorseCallbackInterrupted.Create();
+  end
+  else
+    Next();
+end;
 
-    FJWT.Header.JSON := System.JSON.TJSONObject(TJSONObject.ParseJSONValue(aHeader));
-    FJWT.Claims.JSON := System.JSON.TJSONObject(TJSONObject.ParseJSONValue(aPayload));
+class procedure JWT.Guard(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  LWebResponse: {$IF DEFINED(FPC)}TResponse{$ELSE} TWebResponse {$ENDIF};
+  LToken      : string;
+begin
+  LWebResponse := THorseHackResponse(Res).GetWebResponse;
 
-    LKey    := JOSE.Core.JWK.TJWK.Create(aPassword);
-    LSigner := JOSE.Core.JWS.TJWS.Create(FJWT);
-
-    LSigner.SkipKeyValidation := true;
-    LSigner.Sign(LKey, aJoseAlgorithmID);
-
-    Result := LSigner.Header.AsString + '.' + LSigner.Payload.AsString + '.' + LSigner.Signature.AsString;
-    LKey.Free;
-    LSigner.Free;
-    FJWT.Free;
+  LToken := Req.Headers[AUTHORIZATION];
+  if LToken.Trim.IsEmpty and not Req.Query.TryGetValue(AUTHORIZATION, LToken) then
+  begin
+    Res.Send('Authorization not found').Status(THTTPStatus.Unauthorized).RawWebResponse
+    {$IF DEFINED(FPC)}
+      .WWWAuthenticate := Format('Basic realm=%s', [RealmMessage]);
+    {$ELSE}
+      .Realm := 'Enter credentials';
+    {$ENDIF}
+    raise EHorseCallbackInterrupted.Create;
   end;
 
-var
-  LHeader : String;
-  LPayload: String;
-begin
-  Result   := '';
-  LHeader  := String(Format('{"alg":"%s","typ":"JWT"}', [aJwtAlgorithm.AsString]));
-  LPayload := String(Format('{ "jti": "%d", "iss": "%s", "aud":"%s", "iat":"%s", "exp": "%s" }', [ { }
-    aJwtID,                                                                                        { }
-    aEmissor,                                                                                      { }
-    aIPClient,
-    FormatDateTime('yyyymmddHHmmsszzz', now),            { }
-    FormatDateTime('yyyymmddHHmmsszzz', IncHour(now, 2)) { }
-    ]));
-
-  Result := GenerateToken(LHeader.ClearLineBreak, LPayload.ClearLineBreak, aPassword);
-end;
-
-function Verify(aToken: String; aPassword: String = 'your-256-bit-secret'): boolean;
-var
-  LKey         : TJWK;
-  LToken       : TJWT;
-  LSigner      : TJWS;
-  LCompactToken: String;
-begin
-  Result        := False;
-  LCompactToken := aToken.ClearLineBreak;
-  LKey          := TJWK.Create(aPassword);
-  LToken        := TJWT.Create;
-  try
-    LSigner                   := TJWS.Create(LToken);
-    LSigner.SkipKeyValidation := true;
-    try
-      LSigner.SetKey(LKey);
-      LSigner.CompactToken := LCompactToken;
-      LSigner.VerifySignature;
-    finally
-      LSigner.Free;
-    end;
-
-    if LToken.Verified then
-      Result := true;
-  finally
-    LKey.Free;
-    LToken.Free;
+  if not LToken.ToLower.StartsWith(BEARER) then
+  begin
+    Res.Send('Invalid authorization type').Status(THTTPStatus.Unauthorized);
+    raise EHorseCallbackInterrupted.Create;
   end;
-end;
 
-function TJwtAlgorithmHelper.AsJoseAlgorithmID: TJoseAlgorithmID;
-begin
-  Result := Self.AsString.AsJoseAlgorithmID;
-end;
+  LToken := LToken.Replace(BEARER, '', [rfIgnoreCase]).Trim;
 
-function TJwtAlgorithmHelper.AsString: String;
-begin
-  Result := GetEnumName(TypeInfo(TJwtAlgorithm), integer(Self));
-end;
-
-{ TJwtAlgorithmStringHelper }
-
-function TJwtAlgorithmStringHelper.AsJoseAlgorithmID: TJoseAlgorithmID;
-begin
-  Result := TJoseAlgorithmID(GetEnumValue(TypeInfo(TJoseAlgorithmID), Self));
-end;
-
-function TJwtAlgorithmStringHelper.AsJwtAlgorithm: TJwtAlgorithm;
-begin
-  Result := TJwtAlgorithm(GetEnumValue(TypeInfo(TJwtAlgorithm), String(Self)));
-end;
-
-function TJwtAlgorithmStringHelper.ClearLineBreak: String;
-begin
-  Self   := String(StringReplace(Self, sLineBreak, '', [rfReplaceAll]));
-  Result := Self;
+  Horse.JWT.Core.JWT.Verify(LToken, );
+  Horse.JWT.Core.JWT.
 end;
 
 end.

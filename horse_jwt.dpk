@@ -36,7 +36,9 @@ requires
   JOSE;
 
 contains
-  Horse.JWT in 'src\Horse.JWT.pas';
+  Horse.JWT in 'src\Horse.JWT.pas',
+  Core.JWT in 'src\Core.JWT.pas',
+  Core.JWT.Interfaces in 'src\Core.JWT.Interfaces.pas',
+  Core.JWT.Enums in 'src\Core.JWT.Enums.pas';
 
 end.
-
