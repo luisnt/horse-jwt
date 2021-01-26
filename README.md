@@ -1,6 +1,6 @@
-# horse-basic-auth
-
-Middleware for Basic Authentication in HORSE
+@ -0,0 +1,2 @@
+# horse-jwt
+Middleware to generate jwt token and verify signature on HORSE servers
 
 Sample Horse server validate basic authentication:
 
