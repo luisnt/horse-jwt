@@ -92,8 +92,8 @@
         <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -102,11 +102,16 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="IndyCore.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
-        <DCCReference Include="JOSE.dcp"/>
         <DCCReference Include="src\Horse.JWT.pas"/>
-        <DCCReference Include="src\Core.JWT.pas"/>
-        <DCCReference Include="src\Core.JWT.Interfaces.pas"/>
-        <DCCReference Include="src\Core.JWT.Enums.pas"/>
+        <DCCReference Include="src\Core\Core.JWT.Utils.pas"/>
+        <DCCReference Include="src\Core\Core.JWT.Header.Interfaces.pas"/>
+        <DCCReference Include="src\Core\Core.JWT.Header.pas"/>
+        <DCCReference Include="src\Core\Core.JWT.Interfaces.pas"/>
+        <DCCReference Include="src\Core\Core.JWT.pas"/>
+        <DCCReference Include="src\Core\Core.JWT.Payload.Interfaces.pas"/>
+        <DCCReference Include="src\Core\Core.JWT.Payload.pas"/>
+        <DCCReference Include="src\Core\Core.JWT.Signature.Interfaces.pas"/>
+        <DCCReference Include="src\Core\Core.JWT.Signature.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

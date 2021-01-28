@@ -1,20 +1,17 @@
 unit Horse.JWT;
-{$IF DEFINED(FPC)}
-{$MODE DELPHI}{$H+}
-{$ENDIF}
 
 interface
 
 uses
-  {$IF DEFINED(FPC)}SysUtils, base64, Classes, {$ELSE} System.SysUtils, System.NetEncoding, System.Classes {$ENDIF}
+  System.SysUtils, System.NetEncoding, System.Classes
     , Horse
     , Horse.Commons
     ;
 
 type
-  JWT = class
-    class procedure Login(Req: THorseRequest; Res: THorseResponse; Next: {$IF DEFINED(FPC)} TNextProc {$ELSE} TProc {$ENDIF} );
-    class procedure Guard(Req: THorseRequest; Res: THorseResponse; Next: {$IF DEFINED(FPC)} TNextProc {$ELSE} TProc {$ENDIF} );
+  TJWT = class
+    class procedure Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+    class procedure Guard(Req: THorseRequest; Res: THorseResponse; Next: TProc);
   end;
 
 const
@@ -29,13 +26,10 @@ uses
     , Core.JWT
     ;
 
-{ JWT }
+{ TJWT }
 
-class procedure JWT.Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
-  LWebResponse: {$IF DEFINED(FPC)}TResponse{$ELSE} TWebResponse {$ENDIF};
+class procedure TJWT.Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 begin
-  LWebResponse := THorseHackResponse(Res).GetWebResponse;
   if THorseHackRequest(Req).GetWebRequest.Method = 'POST' then
   begin
     Res.Send('').Status(THTTPStatus.NoContent);
@@ -45,13 +39,10 @@ begin
     Next();
 end;
 
-class procedure JWT.Guard(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+class procedure TJWT.Guard(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
-  LWebResponse: {$IF DEFINED(FPC)}TResponse{$ELSE} TWebResponse {$ENDIF};
-  LToken      : string;
+  LToken: string;
 begin
-  LWebResponse := THorseHackResponse(Res).GetWebResponse;
-
   LToken := Req.Headers[AUTHORIZATION];
   if LToken.Trim.IsEmpty and not Req.Query.TryGetValue(AUTHORIZATION, LToken) then
   begin
@@ -72,8 +63,13 @@ begin
 
   LToken := LToken.Replace(BEARER, '', [rfIgnoreCase]).Trim;
 
-  Horse.JWT.Core.JWT.Verify(LToken, );
-  Horse.JWT.Core.JWT.
+  if not JWT.Token(LToken).Signature.Verify then
+  begin
+    Res.Send('Access deny.').Status(THTTPStatus.Unauthorized);
+    raise EHorseCallbackInterrupted.Create;
+  end;
+
+  Next();
 end;
 
 end.

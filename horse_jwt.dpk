@@ -32,13 +32,18 @@ package horse_jwt;
 requires
   rtl,
   IndyCore,
-  IndyProtocols,
-  JOSE;
+  IndyProtocols;
 
 contains
   Horse.JWT in 'src\Horse.JWT.pas',
-  Core.JWT in 'src\Core.JWT.pas',
-  Core.JWT.Interfaces in 'src\Core.JWT.Interfaces.pas',
-  Core.JWT.Enums in 'src\Core.JWT.Enums.pas';
+  Core.JWT.Utils in 'src\Core\Core.JWT.Utils.pas',
+  Core.JWT.Header.Interfaces in 'src\Core\Core.JWT.Header.Interfaces.pas',
+  Core.JWT.Header in 'src\Core\Core.JWT.Header.pas',
+  Core.JWT.Interfaces in 'src\Core\Core.JWT.Interfaces.pas',
+  Core.JWT in 'src\Core\Core.JWT.pas',
+  Core.JWT.Payload.Interfaces in 'src\Core\Core.JWT.Payload.Interfaces.pas',
+  Core.JWT.Payload in 'src\Core\Core.JWT.Payload.pas',
+  Core.JWT.Signature.Interfaces in 'src\Core\Core.JWT.Signature.Interfaces.pas',
+  Core.JWT.Signature in 'src\Core\Core.JWT.Signature.pas';
 
 end.
