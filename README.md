@@ -42,7 +42,7 @@ begin
            .iat('2021-01-31 15:55:21.123')   { iat - Issued At       - Emitido em ( Quando o Token foi Emitido / Automático ) }
            .nbf('2021-01-31 18:01:01.001')   { nbf - Not Before      - Validade Iniciada ( Inicia Em ) }
            .exp('2021-01-31 22:01:01.001')   { exp - Expiration Time - Validade Terminada ( Expirar Em ) }
-           .add('chave personalizada', 10.5) { exp - Expiration Time - Validade Terminada ( Expirar Em ) }
+           .add('chave personalizada', 10.5) { Chave personalizada com o valor decimal 10,5 }
       ;
       LToken := JWT.Signature.Sign; 
       Result := LToken;
