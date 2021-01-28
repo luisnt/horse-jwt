@@ -9,11 +9,11 @@ uses Horse, Horse.JWT, System.SysUtils;
 
 begin
   THorse
-    .Use(JWT)
-    .Post('/login', JWT.Login)
+    .Use(JWT.Login)
     .Get('/public', ...)
-    .Get('/private', JWT.Guard)
-    .Listen(80);
+    .Get('/private', CallbackPrivate, JWT.Guard);
+    
+  THorse.Listen(80);
 end.
 ```
 
