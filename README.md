@@ -1,4 +1,4 @@
-@ -0,0 +1,2 @@
+
 # horse-jwt
 Middleware to generate jwt token and verify signature on HORSE servers
 
