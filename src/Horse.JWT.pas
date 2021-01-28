@@ -9,7 +9,7 @@ uses
     ;
 
 type
-  TJWT = class
+  JWT = class
     class procedure Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
     class procedure Guard(Req: THorseRequest; Res: THorseResponse; Next: TProc);
   end;
@@ -23,12 +23,12 @@ implementation
 
 uses
   Web.HTTPApp
-    , Core.JWT
+    , Horse.JWT.Facade
     ;
 
 { TJWT }
 
-class procedure TJWT.Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+class procedure JWT.Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 begin
   if THorseHackRequest(Req).GetWebRequest.Method = 'POST' then
   begin
@@ -39,7 +39,7 @@ begin
     Next();
 end;
 
-class procedure TJWT.Guard(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+class procedure JWT.Guard(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
   LToken: string;
 begin
@@ -63,7 +63,8 @@ begin
 
   LToken := LToken.Replace(BEARER, '', [rfIgnoreCase]).Trim;
 
-  if not JWT.Token(LToken).Signature.Verify then
+  CoreJWT.JWT.
+  if not  Token(LToken).Signature.Verify then
   begin
     Res.Send('Access deny.').Status(THTTPStatus.Unauthorized);
     raise EHorseCallbackInterrupted.Create;

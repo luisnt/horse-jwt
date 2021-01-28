@@ -44,6 +44,7 @@ contains
   Core.JWT.Payload.Interfaces in 'src\Core\Core.JWT.Payload.Interfaces.pas',
   Core.JWT.Payload in 'src\Core\Core.JWT.Payload.pas',
   Core.JWT.Signature.Interfaces in 'src\Core\Core.JWT.Signature.Interfaces.pas',
-  Core.JWT.Signature in 'src\Core\Core.JWT.Signature.pas';
+  Core.JWT.Signature in 'src\Core\Core.JWT.Signature.pas',
+  Horse.JWT.Facade in 'src\Horse.JWT.Facade.pas';
 
 end.
