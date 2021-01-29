@@ -19,12 +19,14 @@ begin
     .Get('/sobre', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
       Res.Send('Página pública Sobre');
     end)
-    .Post('/login', JWT.Login(ProcAuth))
+    .Post('/login', FuncAuth)
     .Get('/privada', CallbackPrivada, JWT.Guard); // Middleware JWT.Guard Valída o Token
     
   THorse.Listen(80);
 end.
 ```
+
+Função de autenticação
 
 ```delphi
 function FuncAuth(const aUserName: string; const aPassword: string): string;
@@ -45,17 +47,18 @@ begin
            .add('chave personalizada', 10.5) { Chave personalizada com o valor decimal 10,5 }
       ;
       LToken := JWT.Signature.Sign; 
-      Result := LToken;
+      exit(LToken);
    end; 
+   Result := 'Acesso Negado';
 end)
 ```
 
+Método de guarda das rotas
 ```delphi
-function FuncCheckToken(const aToken: string; const aPassword: string): string;
+function JWT.Guard(const aToken: string; const aPassword: string): string; { Função de Checagem do Token }
 begin 
    Result := 
-    JWT
-      .Token(aValue)
+   JWT.Token(aValue)
       .Password(aPassword) { Opcional pois lé da variável de ambiente JWT_PRIVATE_PASSWORD se não encontrada usará a constante DEFAULT_PASSWORD contida na classe }
       .Signature.Verify;
 end)
