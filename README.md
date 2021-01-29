@@ -12,11 +12,13 @@ uses System.SysUtils
 ;
 
 begin
-  THorse.Get('/', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
+  THorse.Get('/', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) 
+  begin
       Res.Send('Página pública Home');
   end);
   
-  THorse.Get('/sobre', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
+  THorse.Get('/sobre', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) 
+  begin
       Res.Send('Página pública Sobre');
   end);
   
@@ -28,7 +30,8 @@ begin
       Res.Send(FuncAuth(LUserName, LPassword));
   end);
   
-  THorse.Get('/privada', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
+  THorse.Get('/privada', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) 
+  begin
          Res.Send('Área restrita protegida por verificação de Json WEB Token Assinado.');
   end), JWT.Guard ); { Middleware JWT.Guard Validará o Token se válido continua. se não bloqueia o acesso a rota }
     
