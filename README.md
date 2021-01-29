@@ -22,16 +22,9 @@ begin
       Res.Send('Página pública Sobre');
   end);
   
-  THorse.Post('/login', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) 
-  var
-   LUserName, LPassword: string;
+  THorse.Post('/login', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)  
   begin
-      { 
-        A Rotina loadReq a ser implementada para alimentar as variáveis LUsername, LPassword 
-        com os dados de usuário e senha  da requisição que podem vir no header, query ou no body da requisição 
-      }
-      loadReq(Req, LUsername, LPassword); 
-      Res.Send(FuncAuth(LUserName, LPassword));
+      Res.Send(FuncAuth(Req));
   end);
   
   THorse.Get('/privada', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) 
@@ -46,12 +39,19 @@ end.
 Função de autenticação
 
 ```delphi
-function FuncAuth(const aUserName: string; const aPassword: string): string;
+
+function FuncAuth(const aReq: THorseRequest): string;
  var
+   LUserName: string;
+   LPassword: string;
    LDataSet:TDataSet;
    LToken: string;
-begin 
+begin
+   
+   loadReq(aReq, LUsername, LPassword); { A Rotina loadReq a ser implementada para alimentar as variáveis LUsername, LPassword com os dados de acesso: }   
+                                        { usuário e senha recebidos na requisição, que podem estar no header, query ou no body da requisição           }
    LDataSet := loadDB(LUsername); { Rotina a ser implementada para consultar os dados do usuário }
+   
    try
      if LDataSet.isEmpty then
         Exit('Acesso Negado 1');
