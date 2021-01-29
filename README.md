@@ -71,9 +71,14 @@ Método de guarda das rotas
 ```delphi
 function JWT.Guard(const aToken: string; const aPassword: string): string; { Função de Checagem do Token }
 begin 
-   Result := 
-   JWT.Token(aValue)
-      .Password(aPassword) { Opcional pois lé da variável de ambiente JWT_PRIVATE_PASSWORD se não encontrada usará a constante DEFAULT_PASSWORD contida na classe }
-      .Signature.Verify;
+    { 
+       Definir a senha atraves do método JWT.Password('secret'); é opcional 
+       Carrega por padrão a ambiente JWT_PRIVATE_PASSWORD e se não existir 
+       usará a constante DEFAULT_PASSWORD='your-256-bit-secret' contida na 
+       unit Core.JWT.Utils.pas 
+    }
+    JWT.Password('secret'); { OPCIONAL }
+      
+    Result := JWT.Token(aValue).Signature.Verify;
 end)
 ```
