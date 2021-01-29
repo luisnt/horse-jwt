@@ -12,15 +12,21 @@ uses System.SysUtils
 ;
 
 begin
-  THorse
-    .Get('/', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
+  THorse.Get('/', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
       Res.Send('Página pública Home');
-    end)
-    .Get('/sobre', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
+  end);
+  
+  THorse.Get('/sobre', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
       Res.Send('Página pública Sobre');
-    end)
-    .Post('/login', FuncAuth)
-    .Get('/privada', CallbackPrivada, JWT.Guard); // Middleware JWT.Guard Valída o Token
+  end);
+  
+  THorse.Post('/login', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
+      Res.Send(FuncAuth);
+  end);
+  
+  THorse.Get('/privada', procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc) begin
+         Res.Send('Área restrita protegida por verificação de Json WEB Token Assinado.');
+  end), JWT.Guard ); { Middleware JWT.Guard Validará o Token se válido continua. se não bloqueia o acesso a rota }
     
   THorse.Listen(80);
 end.
@@ -35,6 +41,14 @@ var
 begin 
    if samestr(aUserName, 'root') and samestr(aPassword, 'toor') then
    begin
+      { 
+         Definir a senha atraves do método JWT.Password('secret'); é opcional 
+         Carrega por padrão a ambiente JWT_PRIVATE_PASSWORD e se não existir 
+         usará a constante DEFAULT_PASSWORD='your-256-bit-secret' contida na 
+         unit Core.JWT.Utils.pas 
+      }
+      JWT.Password('secret'); { OPCIONAL }
+      
       JWT.Header.Algorithm(TJwtAlgorithm.HS256);
       JWT.Payload
            .jti(1)                           { jti - Jwt ID          - Jwt ID ( ID ) }
